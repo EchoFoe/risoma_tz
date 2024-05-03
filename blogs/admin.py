@@ -1,4 +1,11 @@
+from typing import Any
+
 from django.contrib import admin
+from django.db.models import Field
+from django.urls import reverse
+from django.http import HttpRequest
+
+from dal import autocomplete
 
 from .models import Blog, Post, Comment
 
@@ -22,6 +29,24 @@ class PostInline(admin.StackedInline):
 class BlogAdmin(admin.ModelAdmin):
     """ Админ-панель для Blog """
 
+    def formfield_for_foreignkey(self, db_field: Field, request: HttpRequest, **kwargs: Any) -> Any:
+        """
+        Переопределение поля формы для внешнего ключа.
+
+        :param db_field: Обрабатываемое поле базы данных.
+        :type db_field: Field.
+        :param request: Текущий HTTP-запрос.
+        :type request: HttpRequest.
+        :param kwargs: Именованные аргументы.
+        :type kwargs: Any
+
+        :return: Измененное поле формы.
+        :rtype: Any
+        """
+        if db_field.name == 'user':
+            kwargs['widget'] = autocomplete.ModelSelect2(url=reverse('blogs:admin_user_autocomplete'))
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
     save_as = True
     inlines = [PostInline]
     readonly_fields = ['created_at', 'updated_at']
@@ -40,6 +65,24 @@ class BlogAdmin(admin.ModelAdmin):
 class PostAdmin(admin.ModelAdmin):
     """ Админ-панель для Blog """
 
+    def formfield_for_foreignkey(self, db_field: Field, request: HttpRequest, **kwargs: Any) -> Any:
+        """
+        Переопределение поля формы для внешнего ключа.
+
+        :param db_field: Обрабатываемое поле базы данных.
+        :type db_field: Field.
+        :param request: Текущий HTTP-запрос.
+        :type request: HttpRequest.
+        :param kwargs: Именованные аргументы.
+        :type kwargs: Any
+
+        :return: Измененное поле формы.
+        :rtype: Any
+        """
+        if db_field.name == 'blog':
+            kwargs['widget'] = autocomplete.ModelSelect2(url=reverse('blogs:admin_blog_autocomplete'))
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
     save_as = True
     readonly_fields = ['created_at', 'updated_at']
     list_display = ['id', 'blog', 'title']
@@ -57,6 +100,26 @@ class PostAdmin(admin.ModelAdmin):
 @admin.register(Comment)
 class CommentAdmin(admin.ModelAdmin):
     """ Админ-панель для Comment """
+
+    def formfield_for_foreignkey(self, db_field: Field, request: HttpRequest, **kwargs: Any) -> Any:
+        """
+        Переопределение поля формы для внешнего ключа.
+
+        :param db_field: Обрабатываемое поле базы данных.
+        :type db_field: Field.
+        :param request: Текущий HTTP-запрос.
+        :type request: HttpRequest.
+        :param kwargs: Именованные аргументы.
+        :type kwargs: Any
+
+        :return: Измененное поле формы.
+        :rtype: Any
+        """
+        if db_field.name == 'post':
+            kwargs['widget'] = autocomplete.ModelSelect2(url=reverse('blogs:admin_post_autocomplete'))
+        if db_field.name == 'author':
+            kwargs['widget'] = autocomplete.ModelSelect2(url=reverse('blogs:admin_user_autocomplete'))
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
     save_as = True
     readonly_fields = ['created_at', 'updated_at']
