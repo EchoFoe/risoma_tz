@@ -7,6 +7,7 @@ load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv('SECRET_KEY')
+DOCKER_ENVIRONMENT = os.getenv('DOCKER_ENVIRONMENT', False)
 
 DEBUG = True
 
@@ -59,16 +60,28 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'risoma_tz.wsgi.application'
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('DB_NAME'),
-        'USER': os.getenv('DB_USER'),
-        'PASSWORD': os.getenv('DB_PASSWORD'),
-        'HOST': os.getenv('DB_HOST'),
-        'PORT': os.getenv('DB_PORT'),
+if DOCKER_ENVIRONMENT:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.getenv('DB_NAME_DOCKER'),
+            'USER': os.getenv('DB_USER_DOCKER'),
+            'PASSWORD': os.getenv('DB_PASSWORD_DOCKER'),
+            'HOST': os.getenv('DB_HOST_DOCKER'),
+            'PORT': os.getenv('DB_PORT_DOCKER'),
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.getenv('DB_NAME', 'default_database_name'),
+            'USER': os.getenv('DB_USER', 'default_database_user'),
+            'PASSWORD': os.getenv('DB_PASSWORD', 'default_database_password'),
+            'HOST': os.getenv('DB_HOST', 'localhost'),
+            'PORT': os.getenv('DB_PORT', '5432'),
+        }
+    }
 
 AUTH_PASSWORD_VALIDATORS = [
     {

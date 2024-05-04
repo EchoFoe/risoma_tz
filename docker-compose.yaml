@@ -1,0 +1,29 @@
+version: '3'
+
+services:
+  web:
+    build: .
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/code
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    env_file:
+      - .env
+    environment:
+      - DOCKER_ENVIRONMENT=True
+    container_name: risoma_application
+
+  db:
+    image: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=${DB_NAME_DOCKER}
+      - POSTGRES_USER=${DB_USER_DOCKER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD_DOCKER}
+      - POSTGRES_HOST=${DB_HOST_DOCKER}
+      - POSTGRES_PORT=${DB_PORT_DOCKER}
+    container_name: risoma_db
