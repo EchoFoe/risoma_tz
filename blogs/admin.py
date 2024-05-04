@@ -121,9 +121,45 @@ class CommentAdmin(admin.ModelAdmin):
             kwargs['widget'] = autocomplete.ModelSelect2(url=reverse('blogs:admin_user_autocomplete'))
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
+    def truncated_post(self, obj: Any) -> str:
+        """
+        Функция для обрезки текста поста до 80 символов для отображения в админ-панели.
+
+        :param obj: Объект поста у комментария.
+        :type obj: Any
+
+        :return: Усеченный текст поста.
+        :rtype: str
+        """
+        MAX_LENGTH = 80
+        if len(obj.post.title) > MAX_LENGTH:
+            return obj.text[:MAX_LENGTH - 3] + '...'
+        else:
+            return obj.text
+
+    truncated_post.short_description = 'Пост'
+
+    def truncated_text(self, obj: Any) -> str:
+        """
+        Функция для обрезки текста комментария до 80 символов для отображения в админ-панели.
+
+        :param obj: Объект комментария.
+        :type obj: Any
+
+        :return: Усеченный текст комментария.
+        :rtype: str
+        """
+        MAX_LENGTH = 80
+        if len(obj.text) > MAX_LENGTH:
+            return obj.text[:MAX_LENGTH - 3] + '...'
+        else:
+            return obj.text
+
+    truncated_text.short_description = 'Текст комментария'
+
     save_as = True
     readonly_fields = ['created_at', 'updated_at']
-    list_display = ['id', 'post', 'author']
+    list_display = ['id', 'truncated_post', 'truncated_text', 'author']
     list_filter = ['is_active']
     list_display_links = ['id']
     list_per_page = 50
