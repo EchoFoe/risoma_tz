@@ -45,6 +45,8 @@ class CommentSerializer(serializers.ModelSerializer):
     """ Сериализатор для комментариев. """
 
     author = AuthorSerializer(read_only=True)
+    created_at = serializers.DateTimeField(format='%d.%m.%Y %H:%M:%S')
+    updated_at = serializers.DateTimeField(format='%d.%m.%Y %H:%M:%S')
 
     class Meta:
         model = Comment
