@@ -163,7 +163,7 @@ class CommentAdmin(admin.ModelAdmin):
     list_filter = ['is_active']
     list_display_links = ['id']
     list_per_page = 50
-    search_fields = ['author', 'post__title']
+    search_fields = ['author']
     fieldsets = (
         ('Основная информация', {'fields': (('post', 'author', 'is_active'),)}),
         ('Текст комментария', {'fields': ('text',)}),
