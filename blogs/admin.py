@@ -133,9 +133,9 @@ class CommentAdmin(admin.ModelAdmin):
         """
         MAX_LENGTH = 80
         if len(obj.post.title) > MAX_LENGTH:
-            return obj.text[:MAX_LENGTH - 3] + '...'
+            return obj.post.title[:MAX_LENGTH - 3] + '...'
         else:
-            return obj.text
+            return obj.post.title
 
     truncated_post.short_description = 'Пост'
 
