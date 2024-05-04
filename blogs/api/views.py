@@ -1,9 +1,10 @@
 from typing import Type, Any, Optional
 
-from rest_framework.generics import ListAPIView
+from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.pagination import PageNumberPagination, BasePagination
 from rest_framework import status
 from rest_framework.response import Response
+from rest_framework.request import Request
 
 from django.db.models.query import QuerySet
 
@@ -12,9 +13,10 @@ from drf_yasg import openapi
 from rest_framework.serializers import BaseSerializer
 
 from blogs.models import Post
-from .serializers import PostSerializer
+from .serializers import PostSerializer, CommentSerializer
 
 POSTS = 'Посты'
+POST_DETAIL = 'Детали поста'
 
 
 class PostPagination(PageNumberPagination):
@@ -84,3 +86,71 @@ class PostListView(ListAPIView):
             return Response(serializer.data)
         except Exception as e:
             return Response({'detail': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class PostDetailView(RetrieveAPIView):
+    """
+    Детальная информация о посте с его комментариями.
+
+    Параметры запроса:
+    - post_id (int): Идентификатор поста.
+
+    Пример ответа:
+    Если пост найден, возвращается статус 200 OK и информация о посте:
+    {
+        "id": "Идентификатор поста (int)",
+        "blog": {
+            "id": "Идентификатор блога (int)",
+            "account": {
+                "username": "Логин автора блога (str)",
+                "phone": "Номер телефона автора блога (str)",
+                "full_name": "Фамилия и имя автора блога (str)"
+            }
+        },
+        "title": "Заголовок поста (str)",
+        "content": "Содержание поста (str)",
+        "num_comments": "Количество комментариев (int)",
+        "is_active": true (bool),
+        "created_at": "Дата и время создания поста (str)",
+        "updated_at": "Дата и время обновления поста (str)"
+        "comments": [
+            {
+                "id": "Идентификатор комментария (int)",
+                "author": {
+                    "username": "Логин автора комментария (str)",
+                    "phone": "Номер телефона автора комментария (str)",
+                    "full_name": "Фамилия и имя автора комментария (str)"
+                },
+                "text": "Текст комментария (str)",
+                "created_at": "Дата и время создания комментария (str)",
+                "updated_at": "Дата и время обновления комментария (str)"
+            },
+            ...
+        ]
+    }
+    Если пост не найден, возвращается статус 404 Not Found.
+    """
+
+    queryset: QuerySet[Post] = Post.objects.filter(is_active=True)
+    serializer_class: Type[BaseSerializer] = PostSerializer
+
+    @swagger_auto_schema(
+        tags=[POST_DETAIL],
+        operation_summary='Детали поста',
+        responses={200: openapi.Response('OK', PostSerializer(many=True))},
+        manual_parameters=[
+            openapi.Parameter(
+                'post_id', openapi.IN_QUERY, description='Идентификатор поста', type=openapi.TYPE_INTEGER),
+        ]
+    )
+    def retrieve(self, request: Request, *args: Any, **kwargs: Any) -> Response:
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+
+        comments = instance.comments.filter(is_active=True)
+        comments_serializer = CommentSerializer(comments, many=True)
+
+        response_data = serializer.data
+        response_data['comments'] = comments_serializer.data
+
+        return Response(response_data, status=status.HTTP_200_OK)
